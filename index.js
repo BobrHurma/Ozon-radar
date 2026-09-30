@@ -1,4 +1,5 @@
 const axios = require('axios');
+const http = require('http'); // Добавили встроенный веб-сервер для Render
 
 // ================= НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ =================
 const TELEGRAM_TOKEN = '8095092747:AAElTvTHloYOuHmbRwRb2NeIlLRCxvCX65A'; // Ваш токен бота
@@ -22,7 +23,7 @@ async function sendTelegramAlert() {
     }
 }
 
-// Запуск цикла, который не даст серверу уснуть или упасть
+// Запуск цикла бота
 function startRadarLoop() {
     console.log('--- Облачный радар работает в фоновом режиме 24/7 ---');
     sendTelegramAlert();
@@ -32,5 +33,16 @@ function startRadarLoop() {
     }, CHECK_INTERVAL);
 }
 
-// Мгновенный старт при деплое
-startRadarLoop();
+// СОЗДАЕМ ВЕБ-ЗАГЛУШКУ ДЛЯ RENDER, ЧТОБЫ СТАТУС СТАЛ LIVE
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Ozon Radar Bot is active!\n');
+});
+
+// Слушаем порт, который выдаст Render (по умолчанию 10000)
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => {
+    console.log(`Сервер заглушка запущен на порту ${PORT}`);
+    // Запускаем бота только после того, как поднялся веб-порт
+    startRadarLoop();
+});
